@@ -1,6 +1,6 @@
 #!/data/data/com.termux/files/usr/bin/bash
 # ═══════════════════════════════════════════════════════════════════════════
-#  SPIN.SH — Storage Permission + Module Installer + OB55-SPIN Clone + Run
+#  SPIN.SH — Storage + Modules + Protobuf Fix + Clone + Run
 #  Author: ARIYAN A9X
 #  Usage : bash spin.sh
 # ═══════════════════════════════════════════════════════════════════════════
@@ -75,12 +75,12 @@ rgb_progress_box() {
 clear
 box_top
 box_center "⚡ ARIYAN A9X — OB55 SPIN ⚡" "$YELLOW"
-box_center "Storage + Modules + Clone + Run" "$CYAN"
+box_center "Storage + Modules + Protobuf Fix + Run" "$CYAN"
 box_bot
 echo ""
 
 # ═══════════════════════════════════════════════════════════════════════════
-#  STEP 0 — STORAGE PERMISSION (সবার আগে)
+#  STEP 0 — STORAGE PERMISSION
 # ═══════════════════════════════════════════════════════════════════════════
 box_top
 box_center "📱 ধাপ ০ — Storage Permission" "$YELLOW"
@@ -88,7 +88,6 @@ box_line
 
 box_left "🔍 Storage permission চেক করা হচ্ছে..." "$CYAN"
 
-# Termux check
 if [ -d "/data/data/com.termux" ]; then
     IS_TERMUX=1
 else
@@ -96,16 +95,13 @@ else
 fi
 
 if [ $IS_TERMUX -eq 1 ]; then
-    # termux-setup-storage কমান্ড আছে কিনা চেক
     if ! command -v termux-setup-storage &>/dev/null; then
         printf "\033[1A\033[2K"
-        box_left "⚠️  termux-setup-storage কমান্ড নেই" "$YELLOW"
         box_left "📦 termux-tools ইনস্টল হচ্ছে..." "$CYAN"
         pkg install -y termux-tools &>/dev/null
         printf "\033[1A\033[2K"
     fi
 
-    # storage ফোল্ডার আগে থেকেই আছে কিনা
     if [ -d "$HOME/storage" ] && [ -d "$HOME/storage/shared" ]; then
         printf "\033[1A\033[2K"
         box_left "✅ Storage permission আগেই দেওয়া আছে" "$GREEN"
@@ -116,17 +112,14 @@ if [ $IS_TERMUX -eq 1 ]; then
         echo ""
         box_bot
         echo ""
-        
-        # Permission নেওয়ার কমান্ড
+
         termux-setup-storage
-        
-        # Popup এ Allow দেওয়ার জন্য অপেক্ষা
+
         echo ""
         box_top
         box_center "⏳ Popup এ Allow দেওয়ার জন্য অপেক্ষা..." "$YELLOW"
         box_line
-        
-        # সর্বোচ্চ ৩০ সেকেন্ড অপেক্ষা করি
+
         WAITED=0
         while [ $WAITED -lt 30 ]; do
             if [ -d "$HOME/storage" ] && [ -d "$HOME/storage/shared" ]; then
@@ -135,14 +128,13 @@ if [ $IS_TERMUX -eq 1 ]; then
             sleep 1
             WAITED=$(( WAITED + 1 ))
         done
-        
+
         if [ -d "$HOME/storage" ] && [ -d "$HOME/storage/shared" ]; then
             printf "\033[1A\033[2K"
             box_left "✅ Storage permission পাওয়া গেছে" "$GREEN"
         else
             printf "\033[1A\033[2K"
             box_left "❌ Storage permission দেওয়া হয়নি" "$RED"
-            box_left "💡 আবার চেষ্টা করুন: termux-setup-storage" "$YELLOW"
             box_bot
             echo ""
             exit 1
@@ -198,7 +190,6 @@ MODULES=(
     "requests|pip"
     "urllib3|pip"
     "pycryptodome|pip"
-    "protobuf==3.20.3|pip"
     "protobuf-decoder|pip"
     "blackboxprotobuf|pip"
     "colorama|pip"
@@ -259,8 +250,77 @@ rgb_progress_box "$TOTAL" "$TOTAL"
 box_bot
 echo ""
 
+# ═══════════════════════════════════════════════════════════════════════════
+#  STEP 2.5 — PROTOBUF FIX (গুরুত্বপূর্ণ!)
+# ═══════════════════════════════════════════════════════════════════════════
+box_top
+box_center "🔧 ধাপ ২.৫ — Protobuf Fix" "$YELLOW"
+box_line
+
+# ── পুরনো protobuf ও pkg version conflict রিমুভ ──
+box_left "🗑️  পুরনো protobuf রিমুভ করা হচ্ছে..." "$CYAN"
+pkg uninstall python-protobuf -y &>/dev/null
+$PY -m pip uninstall protobuf -y --break-system-packages &>/dev/null \
+    || $PY -m pip uninstall protobuf -y &>/dev/null
+printf "\033[1A\033[2K"
+box_left "✅ পুরনো protobuf রিমুভ হয়েছে" "$GREEN"
+
+# ── pip cache পরিষ্কার ──
+box_left "🧹 পিপ ক্যাশ পরিষ্কার করা হচ্ছে..." "$CYAN"
+$PY -m pip cache purge &>/dev/null
+printf "\033[1A\033[2K"
+box_left "✅ ক্যাশ পরিষ্কার" "$GREEN"
+
+# ── সঠিক ভার্সন ইনস্টল ──
+box_left "⬇️  protobuf==3.20.3 ইনস্টল হচ্ছে..." "$CYAN"
+$PY -m pip install --force-reinstall "protobuf==3.20.3" -q --break-system-packages &>/dev/null \
+    || $PY -m pip install --force-reinstall "protobuf==3.20.3" -q &>/dev/null
+printf "\033[1A\033[2K"
+box_left "✅ protobuf==3.20.3 ইনস্টল সম্পন্ন" "$GREEN"
+
+# ── protobuf-decoder পুনরায় নিশ্চিত ──
+box_left "⬇️  protobuf-decoder নিশ্চিত করা হচ্ছে..." "$CYAN"
+$PY -m pip install --force-reinstall protobuf-decoder -q --break-system-packages &>/dev/null \
+    || $PY -m pip install --force-reinstall protobuf-decoder -q &>/dev/null
+printf "\033[1A\033[2K"
+box_left "✅ protobuf-decoder ইনস্টল সম্পন্ন" "$GREEN"
+
+# ── builder মডিউল verify ──
+box_left "🔍 builder মডিউল verify করা হচ্ছে..." "$CYAN"
+VERIFY_OUT=$($PY -c "from google.protobuf.internal import builder; print('OK')" 2>&1)
+if echo "$VERIFY_OUT" | grep -q "OK"; then
+    printf "\033[1A\033[2K"
+    box_left "✅ builder মডিউল কাজ করছে" "$GREEN"
+    
+    # ── ভার্সন দেখাও ──
+    PB_VER=$($PY -c "import google.protobuf; print(google.protobuf.__version__)" 2>/dev/null)
+    box_left "📌 protobuf ভার্সন: $PB_VER" "$CYAN"
+else
+    printf "\033[1A\033[2K"
+    box_left "❌ builder এখনো কাজ করছে না" "$RED"
+    box_left "🔄 আবার চেষ্টা করা হচ্ছে..." "$YELLOW"
+    
+    # শেষ চেষ্টা — পূর্ণ reinstall
+    $PY -m pip uninstall protobuf protobuf-decoder blackboxprotobuf -y --break-system-packages &>/dev/null
+    $PY -m pip install --no-cache-dir "protobuf==3.20.3" protobuf-decoder blackboxprotobuf -q --break-system-packages &>/dev/null
+    
+    VERIFY_OUT2=$($PY -c "from google.protobuf.internal import builder; print('OK')" 2>&1)
+    if echo "$VERIFY_OUT2" | grep -q "OK"; then
+        printf "\033[1A\033[2K"
+        box_left "✅ দ্বিতীয় চেষ্টায় সফল" "$GREEN"
+    else
+        printf "\033[1A\033[2K"
+        box_left "❌ builder fix করা যায়নি" "$RED"
+        box_left "⚠️  spin.py চলতে সমস্যা হতে পারে" "$YELLOW"
+        FAILED+=("protobuf-builder")
+    fi
+fi
+
+box_bot
+echo ""
+
 if [ ${#FAILED[@]} -gt 0 ]; then
-    echo -e "${YELLOW}${BOLD}  [!] ব্যর্থ মডিউল:${RESET}"
+    echo -e "${YELLOW}${BOLD}  [!] সমস্যা:${RESET}"
     for f in "${FAILED[@]}"; do
         echo -e "  ${RED}    ❌ $f${RESET}"
     done
@@ -274,7 +334,6 @@ box_top
 box_center "📥 ধাপ ৩ — OB55-SPIN ক্লোন" "$YELLOW"
 box_line
 
-# ── ইন্টারনাল স্টোরেজ পাথ ──
 if [ -d "/sdcard" ]; then
     INTERNAL="/sdcard"
 elif [ -d "$HOME/storage/shared" ]; then
@@ -290,14 +349,12 @@ box_left "📂 টার্গেট ফোল্ডার: OB55 SPIN" "$CYAN"
 box_left "🔗 রিপো: OB55-SPIN.git" "$CYAN"
 box_line
 
-# পুরনো ফোল্ডার থাকলে রিমুভ
 if [ -d "$TARGET_DIR" ]; then
     box_left "🗑️  পুরনো ফোল্ডার রিমুভ করা হচ্ছে..." "$YELLOW"
     rm -rf "$TARGET_DIR" 2>/dev/null
     printf "\033[1A\033[2K"
 fi
 
-# ক্লোন
 box_left "⬇️  ক্লোন করা হচ্ছে..." "$CYAN"
 git clone --depth 1 "$REPO_URL" "$TARGET_DIR" &>/dev/null
 CLONE_RC=$?
@@ -309,7 +366,6 @@ else
     box_left "❌ ক্লোন ব্যর্থ — ইন্টারনেট চেক করুন" "$RED"
     box_bot
     echo ""
-    echo -e "${RED}${BOLD}  ❌ spin.sh বন্ধ করা হচ্ছে${RESET}"
     exit 1
 fi
 
