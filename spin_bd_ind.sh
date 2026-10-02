@@ -1,6 +1,6 @@
 #!/data/data/com.termux/files/usr/bin/bash
 # ═══════════════════════════════════════════════════════════════════════════
-#  SPIN.SH — Storage + Modules + Protobuf Fix + Clone + Run
+#  SPIN.SH — Storage + Modules + Protobuf Fix + Telegram + Clone + Run
 #  Author: ARIYAN A9X
 #  Usage : bash spin.sh
 # ═══════════════════════════════════════════════════════════════════════════
@@ -27,6 +27,9 @@ BOX_W=52
 B="${PINK}${BOLD}"
 RS="${RESET}"
 
+# ═══════════════════════════════════════════════════════════════════════════
+#  TELEGRAM CHANNEL LINK
+# ═══════════════════════════════════════════════════════════════════════════
 TG_LINK="https://t.me/Premiume_FF_Tcp_bot_Community"
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -204,7 +207,6 @@ MODULES=(
     "google-play-scraper|pip"
     "curl|pkg"
     "git|pkg"
-    "tor|pkg"
     "nc|pkg"
 )
 
@@ -323,6 +325,29 @@ if [ ${#FAILED[@]} -gt 0 ]; then
 fi
 
 # ═══════════════════════════════════════════════════════════════════════════
+#  STEP 2.9 — TELEGRAM AUTO-OPEN (Clone এর ঠিক আগে)
+# ═══════════════════════════════════════════════════════════════════════════
+box_top
+box_center "📢 ধাপ ২.৯ — Telegram Channel" "$YELLOW"
+box_line
+box_left "💎 ফ্রি ফায়ার বট আপডেট পেতে জয়েন করুন" "$WHITE"
+box_line
+box_left "🔗 Premiume_FF_Tcp_bot_Community" "$CYAN"
+box_left "📲 Termux থেকে Telegram এ নিয়ে যাচ্ছি..." "$YELLOW"
+box_bot
+echo ""
+
+sleep 2
+
+# Termux থেকে বের করে সরাসরি Telegram app খুলবে (termux-api লাগে না)
+am start -a android.intent.action.VIEW -d "$TG_LINK" &>/dev/null
+
+echo -e "${GREEN}${BOLD}  ✅ Telegram খোলা হয়েছে — জয়েন করে Termux এ ফিরে আসুন${RESET}"
+echo -e "${CYAN}${BOLD}  ⏳ ৫ সেকেন্ড পরে ক্লোন শুরু হবে...${RESET}"
+sleep 5
+echo ""
+
+# ═══════════════════════════════════════════════════════════════════════════
 #  STEP 3 — GitHub থেকে OB55-SPIN ক্লোন
 # ═══════════════════════════════════════════════════════════════════════════
 box_top
@@ -396,28 +421,10 @@ cd "$(dirname "$SPIN_FILE")" || exit 1
 $PY "$SPIN_FILE"
 
 # ═══════════════════════════════════════════════════════════════════════════
-#  STEP 5 — AUTO-EXIT TERMUX + OPEN TELEGRAM
-#  (spin.py শেষ হওয়ার পর Termux থেকে বেরিয়ে Telegram app খুলবে)
+#  EXIT
 # ═══════════════════════════════════════════════════════════════════════════
 echo ""
 box_top
 box_center "✅ spin.py সম্পন্ন হয়েছে" "$GREEN"
-box_line
-box_left "📢 Telegram চ্যানেলে নিয়ে যাওয়া হচ্ছে..." "$YELLOW"
-box_left "🔗 Premiume_FF_Tcp_bot_Community" "$CYAN"
 box_bot
 echo ""
-
-# Telegram app সরাসরি খুলবে (Android intent)
-if command -v am &>/dev/null; then
-    am start -a android.intent.action.VIEW -d "$TG_LINK" &>/dev/null
-fi
-
-# Termux থেকে বেরিয়ে যাবে (window বন্ধ হবে)
-sleep 1
-if command -v termux-open-url &>/dev/null; then
-    termux-open-url "$TG_LINK" &>/dev/null
-fi
-
-# Termux session বন্ধ করে দেবে — অটোমেটিক বের করে দেবে
-exit 0
