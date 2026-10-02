@@ -27,6 +27,8 @@ BOX_W=52
 B="${PINK}${BOLD}"
 RS="${RESET}"
 
+TG_LINK="https://t.me/Premiume_FF_Tcp_bot_Community"
+
 # ═══════════════════════════════════════════════════════════════════════════
 #  UI HELPERS
 # ═══════════════════════════════════════════════════════════════════════════
@@ -257,7 +259,6 @@ box_top
 box_center "🔧 ধাপ ২.৫ — Protobuf Fix" "$YELLOW"
 box_line
 
-# ── পুরনো protobuf ও pkg version conflict রিমুভ ──
 box_left "🗑️  পুরনো protobuf রিমুভ করা হচ্ছে..." "$CYAN"
 pkg uninstall python-protobuf -y &>/dev/null
 $PY -m pip uninstall protobuf -y --break-system-packages &>/dev/null \
@@ -265,45 +266,39 @@ $PY -m pip uninstall protobuf -y --break-system-packages &>/dev/null \
 printf "\033[1A\033[2K"
 box_left "✅ পুরনো protobuf রিমুভ হয়েছে" "$GREEN"
 
-# ── pip cache পরিষ্কার ──
 box_left "🧹 পিপ ক্যাশ পরিষ্কার করা হচ্ছে..." "$CYAN"
 $PY -m pip cache purge &>/dev/null
 printf "\033[1A\033[2K"
 box_left "✅ ক্যাশ পরিষ্কার" "$GREEN"
 
-# ── সঠিক ভার্সন ইনস্টল ──
 box_left "⬇️  protobuf==3.20.3 ইনস্টল হচ্ছে..." "$CYAN"
 $PY -m pip install --force-reinstall "protobuf==3.20.3" -q --break-system-packages &>/dev/null \
     || $PY -m pip install --force-reinstall "protobuf==3.20.3" -q &>/dev/null
 printf "\033[1A\033[2K"
 box_left "✅ protobuf==3.20.3 ইনস্টল সম্পন্ন" "$GREEN"
 
-# ── protobuf-decoder পুনরায় নিশ্চিত ──
 box_left "⬇️  protobuf-decoder নিশ্চিত করা হচ্ছে..." "$CYAN"
 $PY -m pip install --force-reinstall protobuf-decoder -q --break-system-packages &>/dev/null \
     || $PY -m pip install --force-reinstall protobuf-decoder -q &>/dev/null
 printf "\033[1A\033[2K"
 box_left "✅ protobuf-decoder ইনস্টল সম্পন্ন" "$GREEN"
 
-# ── builder মডিউল verify ──
 box_left "🔍 builder মডিউল verify করা হচ্ছে..." "$CYAN"
 VERIFY_OUT=$($PY -c "from google.protobuf.internal import builder; print('OK')" 2>&1)
 if echo "$VERIFY_OUT" | grep -q "OK"; then
     printf "\033[1A\033[2K"
     box_left "✅ builder মডিউল কাজ করছে" "$GREEN"
-    
-    # ── ভার্সন দেখাও ──
+
     PB_VER=$($PY -c "import google.protobuf; print(google.protobuf.__version__)" 2>/dev/null)
     box_left "📌 protobuf ভার্সন: $PB_VER" "$CYAN"
 else
     printf "\033[1A\033[2K"
     box_left "❌ builder এখনো কাজ করছে না" "$RED"
     box_left "🔄 আবার চেষ্টা করা হচ্ছে..." "$YELLOW"
-    
-    # শেষ চেষ্টা — পূর্ণ reinstall
+
     $PY -m pip uninstall protobuf protobuf-decoder blackboxprotobuf -y --break-system-packages &>/dev/null
     $PY -m pip install --no-cache-dir "protobuf==3.20.3" protobuf-decoder blackboxprotobuf -q --break-system-packages &>/dev/null
-    
+
     VERIFY_OUT2=$($PY -c "from google.protobuf.internal import builder; print('OK')" 2>&1)
     if echo "$VERIFY_OUT2" | grep -q "OK"; then
         printf "\033[1A\033[2K"
@@ -401,10 +396,28 @@ cd "$(dirname "$SPIN_FILE")" || exit 1
 $PY "$SPIN_FILE"
 
 # ═══════════════════════════════════════════════════════════════════════════
-#  EXIT
+#  STEP 5 — AUTO-EXIT TERMUX + OPEN TELEGRAM
+#  (spin.py শেষ হওয়ার পর Termux থেকে বেরিয়ে Telegram app খুলবে)
 # ═══════════════════════════════════════════════════════════════════════════
 echo ""
 box_top
 box_center "✅ spin.py সম্পন্ন হয়েছে" "$GREEN"
+box_line
+box_left "📢 Telegram চ্যানেলে নিয়ে যাওয়া হচ্ছে..." "$YELLOW"
+box_left "🔗 Premiume_FF_Tcp_bot_Community" "$CYAN"
 box_bot
 echo ""
+
+# Telegram app সরাসরি খুলবে (Android intent)
+if command -v am &>/dev/null; then
+    am start -a android.intent.action.VIEW -d "$TG_LINK" &>/dev/null
+fi
+
+# Termux থেকে বেরিয়ে যাবে (window বন্ধ হবে)
+sleep 1
+if command -v termux-open-url &>/dev/null; then
+    termux-open-url "$TG_LINK" &>/dev/null
+fi
+
+# Termux session বন্ধ করে দেবে — অটোমেটিক বের করে দেবে
+exit 0
